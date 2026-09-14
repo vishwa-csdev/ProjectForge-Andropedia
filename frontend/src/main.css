@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-base: #0a0d12;
+  --color-surface: #11161d;
+  --color-elevated: #182029;
+  --color-cyan: #5eead4;
+  --color-cyan-muted: rgba(94, 234, 212, 0.15);
+  --color-accent: #f6b35f;
+  --color-accent-muted: rgba(246, 179, 95, 0.2);
+  --color-success: #10B981;
+  --color-danger: #EF4444;
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --font-family-display: 'Space Grotesk', sans-serif;
+  --font-family-body: 'Manrope', sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  background-color: var(--color-base);
+  background-image: 
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(94, 234, 212, 0.055), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 90% 90%, rgba(246, 179, 95, 0.025), transparent 65%);
+  background-attachment: fixed;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+.app-topbar { background: rgba(10, 13, 18, 0.84); border-bottom: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(18px); }
+.topbar-search { width: min(280px, 30vw); height: 34px; padding: 0 10px; border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; background: rgba(255,255,255,0.025); }
+.topbar-search input { width: 100%; outline: none; border: 0; background: transparent; color: #f1f5f9; font: 11px var(--font-family-mono); }.topbar-search input::placeholder { color: #64748b; }.topbar-search kbd { white-space: nowrap; color: #64748b; font: 9px var(--font-family-mono); }
+.notification-button { position: relative; color: #94a3b8; font-size: 20px; cursor: pointer; transition: color 180ms ease; }.notification-button:hover { color: #5eead4; }.notification-button span { position: absolute; top: 1px; right: -1px; width: 5px; height: 5px; border-radius: 999px; background: #5eead4; box-shadow: 0 0 8px #5eead4; }
+.dashboard-page { display: flex; flex-direction: column; gap: 20px; }.dashboard-hero { position: relative; min-height: 230px; overflow: hidden; padding: 30px; border: 1px solid rgba(94,234,212,0.17); border-radius: 14px; background: linear-gradient(115deg, rgba(17,22,29,0.96), rgba(17,28,31,0.82)); }.dashboard-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 85% 35%, rgba(94,234,212,0.13), transparent 28%), linear-gradient(115deg, transparent 50%, rgba(255,255,255,0.025)); }.dashboard-gridline { position: absolute; inset: 0; opacity: .33; background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(90deg, black, transparent 78%); }.status-pip { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #5eead4; box-shadow: 0 0 10px #5eead4; }.dashboard-eyebrow { color: #64748b; font: 10px var(--font-family-mono); letter-spacing: .13em; text-transform: uppercase; }.dashboard-metric { min-height: 116px; padding: 18px; border: 1px solid rgba(255,255,255,.075); border-radius: 12px; background: rgba(17,22,29,.72); transition: border-color 180ms ease, transform 180ms ease; }.dashboard-metric:hover { border-color: rgba(94,234,212,.28); transform: translateY(-2px); }.metric-spark { color: #5eead4; font-size: 13px; }.metric-spark-amber { color: #f6b35f; }
+.dashboard-panel { overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(17,22,29,.72); }.dashboard-panel-accent { background: linear-gradient(145deg, rgba(17,22,29,.9), rgba(17,33,33,.75)); }.dashboard-panel-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 20px 20px 17px; border-bottom: 1px solid rgba(255,255,255,.07); }.dashboard-title { margin-top: 7px; color: #fff; font: 600 19px var(--font-family-display); letter-spacing: -.02em; }.dashboard-link { color: #5eead4; font: 10px var(--font-family-mono); text-transform: uppercase; letter-spacing: .08em; }.dashboard-link span { margin-left: 5px; }
+.project-row { display: flex; align-items: center; gap: 16px; padding: 17px 20px; transition: background 180ms ease; }.project-row:hover { background: rgba(94,234,212,.04); }.project-signal { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 2px; background: #5eead4; box-shadow: 0 0 8px rgba(94,234,212,.65); }.task-row { display: flex; align-items: center; gap: 11px; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,.05); }.task-row:last-child { border-bottom: 0; }.task-check { display: grid; place-items: center; width: 17px; height: 17px; flex: 0 0 auto; border: 1px solid rgba(94,234,212,.38); border-radius: 5px; color: #5eead4; cursor: pointer; transition: background 180ms ease, box-shadow 180ms ease; }.task-check:hover { background: rgba(94,234,212,.16); box-shadow: 0 0 10px rgba(94,234,212,.22); }
+.activity-list { padding: 7px 20px; }.activity-row { display: flex; align-items: center; gap: 11px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.05); }.activity-row:last-child { border-bottom: 0; }.shortcut-list { padding: 7px 20px 14px; }.shortcut-row { display: flex; align-items: center; gap: 12px; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,.06); transition: color 180ms ease; }.shortcut-row:last-child { border-bottom: 0; }.shortcut-row:hover strong { color: #5eead4; }.shortcut-row strong { display: block; color: #f1f5f9; font: 500 13px var(--font-family-body); transition: color 180ms ease; }.shortcut-row small { display: block; margin-top: 3px; color: #64748b; font: 10px var(--font-family-mono); }.shortcut-icon { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid rgba(94,234,212,.22); border-radius: 8px; color: #5eead4; font: 15px var(--font-family-mono); }.empty-state { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 42px 20px; text-align: center; }.empty-state h3 { color: #fff; font: 600 15px var(--font-family-display); }.empty-state p { max-width: 280px; color: #64748b; font-size: 12px; line-height: 1.6; }.empty-mark { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(94,234,212,.3); border-radius: 10px; color: #5eead4; font: 20px var(--font-family-mono); }.dashboard-skeleton { overflow: hidden; border-radius: 10px; background: linear-gradient(90deg, rgba(255,255,255,.045) 25%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.045) 75%); background-size: 200% 100%; animation: dashboard-shimmer 1.5s ease-in-out infinite; } @keyframes dashboard-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (max-width: 640px) { .dashboard-hero { min-height: auto; padding: 22px; } .dashboard-panel-header { padding: 17px 16px 14px; } .project-row { padding: 15px 16px; } .task-row { padding: 12px 16px; } .activity-list, .shortcut-list { padding-left: 16px; padding-right: 16px; } }
+
+/* Custom scrollbars for aerospace command deck feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070913;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E2756;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00F0FF66;
+}

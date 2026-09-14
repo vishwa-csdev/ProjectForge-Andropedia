@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+aiosqlite
+passlib[bcrypt]
+bcrypt
+python-multipart
+itsdangerous
+pydantic[email]
+python-dotenv
+reportlab
