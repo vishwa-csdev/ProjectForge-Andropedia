@@ -28,5 +28,6 @@ Thumbs.db
 .env.local
 .vercel/
 .vercel_python_packages/
+.python-version
 pyproject.toml
 uv.lock

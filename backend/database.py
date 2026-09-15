@@ -1,5 +1,6 @@
 import os
 from typing import AsyncGenerator
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import event
@@ -13,9 +14,19 @@ elif db_url.startswith("postgres://"):
 elif db_url.startswith("postgresql://"):
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+postgres_ssl_required = False
+if db_url.startswith("postgresql+asyncpg://"):
+    parsed_url = urlsplit(db_url)
+    query_pairs = parse_qsl(parsed_url.query)
+    postgres_ssl_required = any(key == "sslmode" and value == "require" for key, value in query_pairs)
+    query = [(key, value) for key, value in query_pairs if key not in {"channel_binding", "sslmode"}]
+    db_url = urlunsplit(parsed_url._replace(query=urlencode(query)))
+
 connect_args = {}
 if "sqlite" in db_url:
     connect_args["check_same_thread"] = False
+elif postgres_ssl_required:
+    connect_args["ssl"] = True
 
 engine = create_async_engine(db_url, connect_args=connect_args, echo=False)
 
