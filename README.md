@@ -56,6 +56,32 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 One process, one port — FastAPI serves both the API and the built React app.
 
+### Vercel Deployment
+
+This repository is configured for a single Vercel project. Import the repository
+with the repository root as the project root; `vercel.json` builds the Vite app
+and routes `/api/*` to the FastAPI function in `api/index.py`.
+
+Set these Project Settings values in Vercel:
+
+| Name | Value |
+|------|-------|
+| `DATABASE_URL` | A hosted database URL, such as a PostgreSQL connection string |
+| `SECRET_KEY` | A long random production secret |
+| `FRONTEND_URL` | The deployed URL, such as `https://your-project.vercel.app` |
+| `DEV_MODE` | `false` |
+| `UPLOAD_DIR` | Optional; defaults to `/tmp/andropedia-uploads` on Vercel |
+| `SMTP_HOST` | Optional SMTP server hostname |
+| `SMTP_PORT` | Optional SMTP server port, normally `587` |
+| `SMTP_USER` | Optional SMTP username |
+| `SMTP_PASSWORD` | Optional SMTP password |
+| `SMTP_FROM` | Optional sender email address |
+
+Use the same values for Preview and Production, except `FRONTEND_URL` can point
+to the relevant preview URL. SQLite and Vercel's filesystem are not persistent
+storage: use a hosted database, and move uploaded files to object storage when
+uploads must survive function restarts or deployments.
+
 ## Environment Variables
 
 | Variable | Default | Description |

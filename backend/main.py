@@ -35,7 +35,7 @@ app.add_middleware(
     session_cookie="session",
     max_age=14 * 24 * 60 * 60,  # 14 days
     same_site="lax",
-    https_only=False, # Set to True in production
+    https_only=not settings.DEV_MODE,
 )
 
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

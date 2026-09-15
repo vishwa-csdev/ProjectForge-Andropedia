@@ -9,7 +9,9 @@ logger = logging.getLogger(__name__)
 class Settings:
     DATABASE_URL: str = os.environ.get("DATABASE_URL", "sqlite:///./andropedia.db")
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "dev-secret-key-fallback")
-    UPLOAD_DIR: str = os.environ.get("UPLOAD_DIR", "./uploads")
+    UPLOAD_DIR: str = os.environ.get(
+        "UPLOAD_DIR", "/tmp/andropedia-uploads" if os.environ.get("VERCEL") else "./uploads"
+    )
     DEV_MODE: bool = os.environ.get("DEV_MODE", "true").lower() == "true"
     FRONTEND_URL: str = os.environ.get("FRONTEND_URL", "http://localhost:5173")
     SMTP_HOST: str = os.environ.get("SMTP_HOST", "")
