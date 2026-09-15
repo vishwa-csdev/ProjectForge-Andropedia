@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
+import BrandMark from '../components/BrandMark';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -41,9 +42,7 @@ const Signup = () => {
       
       <div className="w-full max-w-md bg-surface/80 border border-white/10 rounded-2xl p-8 backdrop-blur-xl shadow-2xl relative z-10">
         <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-amber-400 flex items-center justify-center text-gray-950 font-bold font-mono text-xl shadow-[0_0_20px_rgba(0,240,255,0.4)] mb-4">
-            AH
-          </div>
+          <BrandMark className="mb-4" />
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-text-primary tracking-wide">
             Register Operative
           </h1>

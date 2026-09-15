@@ -16,7 +16,8 @@ export const AuthProvider = ({ children }) => {
           if (sessionResult.data?.session) {
             setUser(await api.get('/auth/me'));
           } else {
-            setUser(null);
+            const response = await fetch('/api/auth/me', { credentials: 'include' });
+            setUser(response.ok ? await response.json() : null);
           }
         } else {
           // Keep local development compatible when Neon Auth is not configured.
@@ -36,8 +37,21 @@ export const AuthProvider = ({ children }) => {
     let userData;
     if (neonAuth) {
       const result = await neonAuth.signIn.email({ email, password });
-      if (result.error) throw new Error(result.error.message || 'Authentication failed');
-      userData = await api.get('/auth/me');
+      if (!result.error) {
+        userData = await api.get('/auth/me');
+      } else {
+        // Existing accounts may still have credentials in the legacy users table.
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password }),
+        });
+        if (!response.ok) {
+          throw new Error(result.error.message || 'Authentication failed');
+        }
+        userData = await response.json();
+      }
     } else {
       userData = await api.post('/auth/login', { email, password });
     }

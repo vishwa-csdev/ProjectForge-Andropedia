@@ -10,3 +10,11 @@ export async function getNeonAccessToken() {
   const result = await neonAuth.getSession();
   return result.data?.session?.access_token || null;
 }
+
+export async function requestNeonPasswordReset(email) {
+  if (!neonAuth) return null;
+  return neonAuth.requestPasswordReset({
+    email,
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+}
