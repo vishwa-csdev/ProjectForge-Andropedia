@@ -24,3 +24,9 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
+.neon
+.env.local
+.vercel/
+.vercel_python_packages/
+pyproject.toml
+uv.lock

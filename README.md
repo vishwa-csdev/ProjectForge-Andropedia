@@ -1,4 +1,4 @@
-# Andropedia Hub
+openssl rand -hex 32openssl rand -hex 32# Andropedia Hub
 
 A project collaboration platform for technical club project work. Members create and join projects, assign and track tasks, manage deadlines, share resources, log contributions, and generate reports.
 

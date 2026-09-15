@@ -1,1 +1,12 @@
--r backend/requirements.txt
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+aiosqlite
+asyncpg
+passlib[bcrypt]
+bcrypt
+python-multipart
+itsdangerous
+pydantic[email]
+python-dotenv
+reportlab
