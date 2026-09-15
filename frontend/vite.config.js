@@ -15,5 +15,15 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
+          dragDrop: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
   },
 });

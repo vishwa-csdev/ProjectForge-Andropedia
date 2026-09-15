@@ -44,9 +44,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
         <div className="p-4 flex items-center justify-between border-b border-white/10 h-16 bg-white/[0.02]">
           {(!collapsed || mobileOpen) ? (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-amber-400 flex items-center justify-center text-gray-950 font-bold font-mono text-sm shadow-[0_0_12px_rgba(0,240,255,0.4)]">
-                AH
-              </div>
+              <img src="/andropedia-logo.jpg" alt="Andropedia" className="w-8 h-8 rounded-lg object-cover object-top shadow-[0_0_12px_rgba(0,240,255,0.4)]" />
               <div className="flex flex-col">
                 <span className="font-display font-bold text-sm tracking-wider text-text-primary uppercase">
                   Andropedia
@@ -57,9 +55,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
               </div>
             </div>
           ) : (
-            <div className="w-8 h-8 mx-auto rounded-lg bg-gradient-to-br from-cyan-400 to-amber-400 flex items-center justify-center text-gray-950 font-bold font-mono text-sm shadow-[0_0_12px_rgba(0,240,255,0.4)]">
-              AH
-            </div>
+            <img src="/andropedia-logo.jpg" alt="Andropedia" className="w-8 h-8 mx-auto rounded-lg object-cover object-top shadow-[0_0_12px_rgba(0,240,255,0.4)]" />
           )}
 
           {/* Desktop collapse toggle */}

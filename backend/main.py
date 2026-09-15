@@ -7,9 +7,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database import engine, Base, get_db
-from models import User
+from models import User, UserRole
 from auth import get_current_user
 from config import settings
+from auth import hash_password
 
 from routers.auth_router import router as auth_router
 from routers.projects_router import router as projects_router
@@ -24,6 +25,18 @@ from routers.admin_router import router as admin_router
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    if settings.ADMIN_EMAIL and settings.ADMIN_PASSWORD:
+        async with AsyncSession(engine) as db:
+            result = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL))
+            admin = result.scalar_one_or_none()
+            if not admin:
+                db.add(User(
+                    name=settings.ADMIN_NAME or "Administrator",
+                    email=settings.ADMIN_EMAIL,
+                    password_hash=hash_password(settings.ADMIN_PASSWORD),
+                    role=UserRole.admin,
+                ))
+                await db.commit()
     yield
     await engine.dispose()
 

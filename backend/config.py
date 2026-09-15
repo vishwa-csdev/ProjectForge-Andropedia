@@ -19,6 +19,9 @@ class Settings:
     SMTP_USER: str = os.environ.get("SMTP_USER", "")
     SMTP_PASSWORD: str = os.environ.get("SMTP_PASSWORD", "")
     SMTP_FROM: str = os.environ.get("SMTP_FROM", "")
+    ADMIN_NAME: str = os.environ.get("ADMIN_NAME", "")
+    ADMIN_EMAIL: str = os.environ.get("ADMIN_EMAIL", "")
+    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "")
 
 settings = Settings()
 

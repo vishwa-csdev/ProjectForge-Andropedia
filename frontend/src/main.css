@@ -1,3 +1,12 @@
+.resource-preview-shell { min-height: min(62vh, 620px); overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: #05060a; }
+.resource-preview-frame { display: block; width: 100%; height: min(62vh, 620px); border: 0; background: #fff; }
+.resource-preview-image { display: block; width: 100%; max-height: min(62vh, 620px); object-fit: contain; background: #05060a; }
+.resource-preview-empty { display: grid; min-height: 260px; place-items: center; align-content: center; gap: 10px; padding: 28px; color: #94a3b8; text-align: center; }
+.resource-preview-empty strong { color: #f8fafc; font-size: 14px; }
+.resource-preview-empty span { max-width: 360px; font-size: 12px; line-height: 1.6; }
+.resource-preview-actions { display: flex; justify-content: flex-end; gap: 9px; padding-top: 15px; }
+.resource-preview-action { display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid rgba(94,234,212,.25); border-radius: 7px; color: #5eead4; background: rgba(94,234,212,.07); font: 10px var(--font-family-mono); text-transform: uppercase; }
+.library-reader { margin-top: 18px; padding: 15px; border: 1px solid rgba(255,255,255,.08); border-radius: 9px; background: rgba(255,255,255,.025); }.library-reader strong { color: #5eead4; font: 10px var(--font-family-mono); letter-spacing: .1em; text-transform: uppercase; }.library-reader p { margin-top: 10px; padding-left: 13px; border-left: 2px solid rgba(94,234,212,.22); color: #cbd5e1; font-size: 12px; }
 @import 'tailwindcss';
 
 @theme {

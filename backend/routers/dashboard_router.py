@@ -37,6 +37,14 @@ class DashboardResponse(BaseModel):
     upcoming_tasks: List[UpcomingTask]
     recent_activity: List[RecentActivity]
 
+class NotificationItem(BaseModel):
+    id: str
+    title: str
+    detail: str
+    href: str
+    kind: str
+    timestamp: Optional[datetime] = None
+
 @router.get("", response_model=DashboardResponse)
 @router.get("/", response_model=DashboardResponse)
 async def get_dashboard(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
@@ -145,3 +153,76 @@ async def get_dashboard_tasks(current_user: User = Depends(get_current_user), db
         tasks.append(UpcomingTask(**task_dict))
         
     return tasks
+
+@router.get("/notifications", response_model=List[NotificationItem])
+async def get_notifications(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    now = datetime.utcnow()
+    two_weeks = now + timedelta(days=14)
+    notifications = []
+
+    task_result = await db.execute(
+        select(Task, Project.name)
+        .join(Project, Project.id == Task.project_id)
+        .where(
+            Task.assignee_id == current_user.id,
+            Task.status != TaskStatus.done,
+            Task.due_date.isnot(None),
+            Task.due_date <= two_weeks,
+        )
+        .order_by(Task.due_date)
+        .limit(10)
+    )
+    for task, project_name in task_result.all():
+        notifications.append(NotificationItem(
+            id=f"task-{task.id}",
+            title="Task due soon",
+            detail=f"{task.title} in {project_name}",
+            href=f"/projects/{task.project_id}/tasks",
+            kind="task",
+            timestamp=task.due_date,
+        ))
+
+    project_result = await db.execute(
+        select(Project)
+        .join(Membership, Membership.project_id == Project.id)
+        .where(
+            Membership.user_id == current_user.id,
+            Project.deadline.isnot(None),
+            Project.deadline <= two_weeks,
+            Project.deadline >= now,
+        )
+        .order_by(Project.deadline)
+        .limit(10)
+    )
+    for project in project_result.scalars().all():
+        notifications.append(NotificationItem(
+            id=f"project-{project.id}",
+            title="Project deadline approaching",
+            detail=project.name,
+            href=f"/projects/{project.id}",
+            kind="deadline",
+            timestamp=project.deadline,
+        ))
+
+    project_ids = select(Membership.project_id).where(Membership.user_id == current_user.id)
+    activity_result = await db.execute(
+        select(Contribution, User.name, Project.name)
+        .join(User, User.id == Contribution.user_id)
+        .join(Project, Project.id == Contribution.project_id)
+        .where(Contribution.project_id.in_(project_ids))
+        .order_by(desc(Contribution.logged_at))
+        .limit(5)
+    )
+    for contribution, user_name, project_name in activity_result.all():
+        if contribution.user_id == current_user.id:
+            continue
+        notifications.append(NotificationItem(
+            id=f"contribution-{contribution.id}",
+            title="New project activity",
+            detail=f"{user_name} logged work in {project_name}",
+            href=f"/projects/{contribution.project_id}/contributions",
+            kind="activity",
+            timestamp=contribution.logged_at,
+        ))
+
+    return sorted(notifications, key=lambda item: item.timestamp or now, reverse=True)

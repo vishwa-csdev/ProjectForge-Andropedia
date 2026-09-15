@@ -70,6 +70,9 @@ Set these Project Settings values in Vercel:
 | `SECRET_KEY` | A long random production secret |
 | `FRONTEND_URL` | The deployed URL, such as `https://your-project.vercel.app` |
 | `DEV_MODE` | `false` |
+| `ADMIN_NAME` | Optional bootstrap administrator display name |
+| `ADMIN_EMAIL` | Optional bootstrap administrator email |
+| `ADMIN_PASSWORD` | Optional bootstrap administrator password; store as a secret |
 | `UPLOAD_DIR` | Optional; defaults to `/tmp/andropedia-uploads` on Vercel |
 | `SMTP_HOST` | Optional SMTP server hostname |
 | `SMTP_PORT` | Optional SMTP server port, normally `587` |
@@ -82,6 +85,10 @@ to the relevant preview URL. SQLite and Vercel's filesystem are not persistent
 storage: use a hosted database, and move uploaded files to object storage when
 uploads must survive function restarts or deployments.
 
+The administrator sign-in page is available at `/admin/login`. When
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` are set, startup creates that administrator
+only if the email does not already exist; it never overwrites an existing user.
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -91,6 +98,9 @@ uploads must survive function restarts or deployments.
 | `UPLOAD_DIR` | `./uploads` | File upload storage directory |
 | `DEV_MODE` | `true` | Include password recovery links in API responses for local testing |
 | `FRONTEND_URL` | `http://localhost:5173` | Base URL used to build password recovery links |
+| `ADMIN_NAME` | empty | Bootstrap administrator display name |
+| `ADMIN_EMAIL` | empty | Bootstrap administrator email |
+| `ADMIN_PASSWORD` | empty | Bootstrap administrator password |
 | `SMTP_HOST` | empty | Optional SMTP host for password recovery delivery |
 | `SMTP_PORT` | `587` | Optional SMTP port |
 | `SMTP_USER` / `SMTP_PASSWORD` | empty | Optional SMTP credentials |

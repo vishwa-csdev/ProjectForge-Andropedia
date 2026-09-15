@@ -78,6 +78,17 @@ async def login(request: Request, login_data: LoginRequest, db: AsyncSession = D
     request.session["user_id"] = user.id
     return user
 
+@router.post("/admin-login", response_model=UserResponse)
+async def admin_login(request: Request, login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == login_data.email))
+    user = result.scalar_one_or_none()
+
+    if not user or user.role != UserRole.admin or not verify_password(login_data.password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid administrator credentials")
+
+    request.session["user_id"] = user.id
+    return user
+
 @router.post("/forgot-password")
 async def forgot_password(payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == payload.email))

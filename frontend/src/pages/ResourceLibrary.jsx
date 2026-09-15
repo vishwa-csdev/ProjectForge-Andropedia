@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
+import { Download, Eye, ExternalLink, FileText } from 'lucide-react';
 
 const TAG_OPTIONS = ['doc', 'link', 'code', 'design'];
 
@@ -17,6 +18,23 @@ const getFileIcon = (title, type) => {
   if (['zip', 'tar', 'gz', 'rar', '7z'].includes(ext)) return '📦';
   if (['py', 'js', 'jsx', 'ts', 'tsx', 'html', 'css', 'json', 'cpp', 'c', 'rs'].includes(ext)) return '💻';
   return '📁';
+};
+
+const getExtension = (value = '') => value.split('?')[0].split('#')[0].split('.').pop()?.toLowerCase();
+
+const getPreviewKind = (resource) => {
+  if (resource.type === 'link') {
+    const extension = getExtension(resource.location);
+    if (extension === 'pdf') return 'pdf';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(extension)) return 'image';
+    return resource.location.includes('docs.google.com') || resource.location.includes('office.com') ? 'embed' : null;
+  }
+
+  const extension = getExtension(resource.title || resource.location);
+  if (extension === 'pdf') return 'pdf';
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(extension)) return 'image';
+  if (['txt', 'md', 'csv', 'json', 'html'].includes(extension)) return 'text';
+  return null;
 };
 
 const ResourceLibrary = () => {
@@ -33,6 +51,7 @@ const ResourceLibrary = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  const [previewResource, setPreviewResource] = useState(null);
   const fileInputRef = useRef(null);
 
   const fetchData = async () => {
@@ -214,6 +233,8 @@ const ResourceLibrary = () => {
             const icon = getFileIcon(r.title, r.type);
             const isFile = r.type === 'file';
             const downloadUrl = `/api/projects/${projectId}/resources/${r.id}/download`;
+            const previewKind = getPreviewKind(r);
+            const resourceUrl = isFile ? downloadUrl : r.location;
 
             return (
               <Card key={r.id} className="flex flex-col justify-between gap-4 surface-hover group">
@@ -246,13 +267,21 @@ const ResourceLibrary = () => {
                   </span>
 
                   <div className="flex items-center gap-2">
+                    {previewKind && (
+                      <button
+                        onClick={() => setPreviewResource({ ...r, previewKind, resourceUrl })}
+                        className="px-2.5 py-1 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/25 transition-colors font-medium flex items-center gap-1.5"
+                      >
+                        <Eye size={13} /> Preview
+                      </button>
+                    )}
                     {isFile ? (
                       <a
                         href={downloadUrl}
                         download
-                        className="px-2.5 py-1 rounded-md bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/25 transition-colors font-medium flex items-center gap-1.5"
+                        className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-text-secondary hover:text-text-primary transition-colors font-medium flex items-center gap-1.5"
                       >
-                        Download
+                        <Download size={13} /> Download
                       </a>
                     ) : (
                       <>
@@ -414,6 +443,30 @@ const ResourceLibrary = () => {
               </Button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {previewResource && (
+        <Modal title={`Preview: ${previewResource.title}`} onClose={() => setPreviewResource(null)}>
+          <div className="resource-preview-shell">
+            {previewResource.previewKind === 'image' ? (
+              <img src={previewResource.resourceUrl} alt={previewResource.title} className="resource-preview-image" />
+            ) : previewResource.previewKind === 'text' ? (
+              <iframe title={previewResource.title} src={previewResource.resourceUrl} className="resource-preview-frame" />
+            ) : previewResource.previewKind === 'pdf' || previewResource.previewKind === 'embed' ? (
+              <iframe title={previewResource.title} src={previewResource.resourceUrl} className="resource-preview-frame" />
+            ) : (
+              <div className="resource-preview-empty">
+                <FileText size={26} />
+                <strong>This document cannot be rendered in the browser.</strong>
+                <span>Download it to open it in your preferred document viewer.</span>
+              </div>
+            )}
+          </div>
+          <div className="resource-preview-actions">
+            <a href={previewResource.resourceUrl} download={previewResource.type === 'file'} target={previewResource.type === 'link' ? '_blank' : undefined} rel="noreferrer" className="resource-preview-action"><Download size={14} /> Download</a>
+            {previewResource.type === 'link' && <a href={previewResource.resourceUrl} target="_blank" rel="noreferrer" className="resource-preview-action"><ExternalLink size={14} /> Open source</a>}
+          </div>
         </Modal>
       )}
     </div>

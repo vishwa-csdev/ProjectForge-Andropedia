@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 from typing import List, Optional
 import os
 import uuid
+import mimetypes
 from pydantic import BaseModel, ConfigDict
 from database import get_db
 from models import Resource, Project, Membership, User, MembershipRole, ResourceType, ResourceTag
@@ -176,7 +177,8 @@ async def download_resource(
     return FileResponse(
         resource.location,
         filename=download_name,
-        media_type="application/octet-stream"
+        media_type=mimetypes.guess_type(download_name)[0] or "application/octet-stream",
+        content_disposition_type="inline",
     )
 
 @router.delete("/{project_id}/resources/{resource_id}")

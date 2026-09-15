@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from './ui/Sidebar';
 import Avatar from './ui/Avatar';
+import { api } from '../api';
 import { Bell, Menu, Search, Check, ArrowUpRight } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -11,16 +12,41 @@ const Layout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Workspace ready', detail: 'Your club dashboard is online.', href: '/' },
-    { id: 2, title: 'Library added', detail: 'Browse shared club references.', href: '/library' },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [readNotificationIds, setReadNotificationIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('andropedia-read-notifications') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!user) return undefined;
+
+    let active = true;
+    const loadNotifications = async () => {
+      try {
+        const items = await api.get('/dashboard/notifications');
+        if (active) setNotifications(items || []);
+      } catch (error) {
+        console.error('Unable to load notifications', error);
+      }
+    };
+
+    loadNotifications();
+    const interval = window.setInterval(loadNotifications, 60000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [user]);
 
   if (loading) {
     return (
@@ -34,7 +60,17 @@ const Layout = ({ children }) => {
     return null;
   }
 
-  const markNotificationRead = (id) => setNotifications((items) => items.filter((item) => item.id !== id));
+  const unreadNotifications = notifications.filter((item) => !readNotificationIds.includes(item.id));
+  const markNotificationRead = (id) => {
+    const next = [...new Set([...readNotificationIds, id])];
+    setReadNotificationIds(next);
+    localStorage.setItem('andropedia-read-notifications', JSON.stringify(next.slice(-100)));
+  };
+  const markAllNotificationsRead = () => {
+    const next = [...new Set([...readNotificationIds, ...notifications.map((item) => item.id)])];
+    setReadNotificationIds(next);
+    localStorage.setItem('andropedia-read-notifications', JSON.stringify(next.slice(-100)));
+  };
 
   return (
     <div className="min-h-screen bg-base flex flex-col md:flex-row text-text-primary">
@@ -59,8 +95,8 @@ const Layout = ({ children }) => {
           >
             <Menu size={20} />
           </button>
-          <div className="hidden md:flex items-center gap-2 text-xs font-mono text-text-muted"><span className="text-cyan-300">AH</span> Workspace <span className="text-white/20">/</span> Overview</div>
-          <div className="flex flex-1 justify-end items-center gap-3 sm:gap-5"><label className="topbar-search hidden sm:flex items-center gap-2"><Search size={14} className="text-text-muted" /><input aria-label="Search workspace" placeholder="Search workspace" /><kbd>⌘ K</kbd></label><div className="notification-wrap"><button aria-label="Notifications" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((open) => !open)} className={`notification-button ${notificationsOpen ? 'is-open' : ''}`}><Bell size={18} strokeWidth={1.9} />{notifications.length > 0 && <span className="notification-count">{notifications.length}</span>}</button>{notificationsOpen && <div className="notification-tray"><div className="notification-tray-header"><div><strong>Notifications</strong><small>{notifications.length ? `${notifications.length} unread` : 'All caught up'}</small></div><Check size={16} className="text-cyan-300" /></div>{notifications.length ? notifications.map((item) => <Link key={item.id} to={item.href} className="notification-item" onClick={() => markNotificationRead(item.id)}><span className="notification-dot" /><span><strong>{item.title}</strong><small>{item.detail}</small></span><ArrowUpRight size={14} /></Link>) : <div className="notification-empty">No new notifications.</div>}</div>}</div><Link to="/profile" className="flex items-center gap-2"><Avatar name={user?.name || 'User'} size="sm" /><span className="hidden lg:block text-xs font-medium text-text-secondary">{user?.name}</span></Link></div>
+          <div className="hidden md:flex items-center gap-2 text-xs font-mono text-text-muted"><img src="/andropedia-logo.jpg" alt="Andropedia" className="w-6 h-6 rounded-md object-cover object-top" /> Workspace <span className="text-white/20">/</span> Overview</div>
+          <div className="flex flex-1 justify-end items-center gap-3 sm:gap-5"><label className="topbar-search hidden sm:flex items-center gap-2"><Search size={14} className="text-text-muted" /><input aria-label="Search workspace" placeholder="Search workspace" /><kbd>⌘ K</kbd></label><div className="notification-wrap"><button aria-label="Notifications" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((open) => !open)} className={`notification-button ${notificationsOpen ? 'is-open' : ''}`}><Bell size={18} strokeWidth={1.9} />{unreadNotifications.length > 0 && <span className="notification-count">{unreadNotifications.length}</span>}</button>{notificationsOpen && <div className="notification-tray"><div className="notification-tray-header"><div><strong>Notifications</strong><small>{unreadNotifications.length ? `${unreadNotifications.length} unread` : 'All caught up'}</small></div>{unreadNotifications.length > 0 ? <button aria-label="Mark all notifications read" onClick={markAllNotificationsRead} className="text-cyan-300 hover:text-white"><Check size={16} /></button> : <Check size={16} className="text-cyan-300" />}</div>{notifications.length ? notifications.map((item) => <Link key={item.id} to={item.href} className={`notification-item ${readNotificationIds.includes(item.id) ? 'is-read' : ''}`} onClick={() => markNotificationRead(item.id)}><span className="notification-dot" /><span><strong>{item.title}</strong><small>{item.detail}</small></span><ArrowUpRight size={14} /></Link>) : <div className="notification-empty">No new notifications.</div>}</div>}</div><Link to="/profile" className="flex items-center gap-2"><Avatar name={user?.name || 'User'} size="sm" /><span className="hidden lg:block text-xs font-medium text-text-secondary">{user?.name}</span></Link></div>
         </header>
 
         {/* Page Content */}

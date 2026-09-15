@@ -42,9 +42,7 @@ const Login = () => {
 
       <div className="w-full max-w-md bg-surface/80 border border-white/10 rounded-2xl p-8 backdrop-blur-xl shadow-2xl relative z-10">
         <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-amber-400 flex items-center justify-center text-gray-950 font-bold font-mono text-xl shadow-[0_0_20px_rgba(0,240,255,0.4)] mb-4">
-            AH
-          </div>
+          <img src="/andropedia-logo.jpg" alt="Andropedia" className="w-36 h-28 object-contain rounded-xl shadow-[0_0_20px_rgba(0,240,255,0.2)] mb-4" />
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-text-primary tracking-wide">
             Andropedia Hub
           </h1>
@@ -97,6 +95,9 @@ const Login = () => {
         <div className="mt-6 text-center">
           <Link to="/signup" className="text-xs font-mono text-text-secondary hover:text-cyan-300 transition-colors">
             NEW OPERATIVE? REGISTER CREDENTIALS
+          </Link>
+          <Link to="/admin/login" className="block mt-3 text-xs font-mono text-amber-300/70 hover:text-amber-200 transition-colors">
+            ADMINISTRATOR ACCESS
           </Link>
         </div>
       </div>
