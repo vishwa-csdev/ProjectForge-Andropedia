@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Avatar from './Avatar';
 import Button from './Button';
 import Badge from './Badge';
-import { Activity, ChevronLeft, ChevronRight, LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, ShieldCheck, UserRound, X, FolderKanban } from 'lucide-react';
+import { BookOpen, LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, ShieldCheck, UserRound, X, FolderKanban } from 'lucide-react';
 
 const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const { user, logout } = useAuth();
@@ -14,6 +14,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Projects', path: '/projects', icon: FolderKanban },
+    { name: 'Library', path: '/library', icon: BookOpen },
     { name: 'Profile', path: '/profile', icon: UserRound },
     ...(user?.role === 'admin' ? [{ name: 'Admin Deck', path: '/admin', icon: ShieldCheck }] : []),
   ];

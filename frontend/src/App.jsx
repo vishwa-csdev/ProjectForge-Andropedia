@@ -12,6 +12,7 @@ const ProjectCreate = lazy(() => import('./pages/ProjectCreate'));
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
 const TaskBoard = lazy(() => import('./pages/TaskBoard'));
 const ResourceLibrary = lazy(() => import('./pages/ResourceLibrary'));
+const ClubLibrary = lazy(() => import('./pages/ClubLibrary'));
 const ContributionLog = lazy(() => import('./pages/ContributionLog'));
 const ReportView = lazy(() => import('./pages/ReportView'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -88,6 +89,7 @@ const App = () => {
             
             <Route path="/" element={<Layout><Dashboard /></Layout>} />
             <Route path="/profile" element={<Layout><Profile /></Layout>} />
+            <Route path="/library" element={<Layout><ClubLibrary /></Layout>} />
             <Route path="/admin" element={<Layout><AdminDashboard /></Layout>} />
             
             <Route path="/projects" element={<Layout><ProjectList /></Layout>} />
