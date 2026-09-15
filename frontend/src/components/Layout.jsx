@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from './ui/Sidebar';
 import Avatar from './ui/Avatar';
-import BrandMark from './BrandMark';
 import { Bell, Menu, Search, Check, ArrowUpRight } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -60,7 +59,7 @@ const Layout = ({ children }) => {
           >
             <Menu size={20} />
           </button>
-          <div className="hidden md:flex items-center gap-2 text-xs font-mono text-text-muted"><BrandMark className="w-5 h-5 rounded-md text-[9px] shadow-none" /> Workspace <span className="text-white/20">/</span> Overview</div>
+          <div className="hidden md:flex items-center gap-2 text-xs font-mono text-text-muted"><span className="text-cyan-300">AH</span> Workspace <span className="text-white/20">/</span> Overview</div>
           <div className="flex flex-1 justify-end items-center gap-3 sm:gap-5"><label className="topbar-search hidden sm:flex items-center gap-2"><Search size={14} className="text-text-muted" /><input aria-label="Search workspace" placeholder="Search workspace" /><kbd>⌘ K</kbd></label><div className="notification-wrap"><button aria-label="Notifications" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((open) => !open)} className={`notification-button ${notificationsOpen ? 'is-open' : ''}`}><Bell size={18} strokeWidth={1.9} />{notifications.length > 0 && <span className="notification-count">{notifications.length}</span>}</button>{notificationsOpen && <div className="notification-tray"><div className="notification-tray-header"><div><strong>Notifications</strong><small>{notifications.length ? `${notifications.length} unread` : 'All caught up'}</small></div><Check size={16} className="text-cyan-300" /></div>{notifications.length ? notifications.map((item) => <Link key={item.id} to={item.href} className="notification-item" onClick={() => markNotificationRead(item.id)}><span className="notification-dot" /><span><strong>{item.title}</strong><small>{item.detail}</small></span><ArrowUpRight size={14} /></Link>) : <div className="notification-empty">No new notifications.</div>}</div>}</div><Link to="/profile" className="flex items-center gap-2"><Avatar name={user?.name || 'User'} size="sm" /><span className="hidden lg:block text-xs font-medium text-text-secondary">{user?.name}</span></Link></div>
         </header>
 

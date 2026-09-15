@@ -3,8 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { api } from '../api';
-import { neonAuth } from '../auth';
-import BrandMark from '../components/BrandMark';
 
 const ResetPassword = () => {
   const location = useLocation();
@@ -23,12 +21,7 @@ const ResetPassword = () => {
     setSubmitting(true);
     setError('');
     try {
-      if (neonAuth) {
-        const response = await neonAuth.resetPassword({ newPassword: password });
-        if (response?.error) throw new Error(response.error.message || 'Password reset failed');
-      } else {
-        await api.post('/auth/reset-password', { token, new_password: password });
-      }
+      await api.post('/auth/reset-password', { token, new_password: password });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 1400);
     } catch (requestError) {
@@ -42,7 +35,7 @@ const ResetPassword = () => {
     <div className="min-h-screen bg-base flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,240,255,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(255,180,84,0.08),transparent_45%)]" />
       <div className="w-full max-w-md bg-surface/90 border border-white/10 rounded-2xl p-8 backdrop-blur-xl shadow-2xl relative">
-        <div className="flex flex-col items-center mb-8 text-center"><BrandMark className="mb-4" /><h1 className="font-display text-2xl font-bold">Set New Passcode</h1><p className="text-xs font-mono text-cyan-400/80 mt-1 uppercase tracking-widest">SECURE CREDENTIAL ROTATION</p></div>
+        <div className="flex flex-col items-center mb-8 text-center"><div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-amber-400 flex items-center justify-center text-gray-950 font-bold font-mono text-xl mb-4">AH</div><h1 className="font-display text-2xl font-bold">Set New Passcode</h1><p className="text-xs font-mono text-cyan-400/80 mt-1 uppercase tracking-widest">SECURE CREDENTIAL ROTATION</p></div>
         {success ? <div className="p-4 rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-sm text-emerald-300 text-center">Passcode updated. Returning to authentication...</div> : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {!token && <Input label="Recovery Token" value={token} onChange={(event) => setToken(event.target.value)} required />}

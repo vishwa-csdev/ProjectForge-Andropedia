@@ -3,15 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import BrandMark from '../components/BrandMark';
-import { neonAuth } from '../auth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [socialSubmitting, setSocialSubmitting] = useState('');
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
@@ -35,21 +32,6 @@ const Login = () => {
     }
   };
 
-  const handleSocialLogin = async (provider) => {
-    setError('');
-    setSocialSubmitting(provider);
-    try {
-      const result = await neonAuth.signIn.social({
-        provider,
-        callbackURL: window.location.origin,
-      });
-      if (result?.error) throw new Error(result.error.message || `${provider} sign-in failed`);
-    } catch (err) {
-      setError(err.message || `${provider} sign-in failed`);
-      setSocialSubmitting('');
-    }
-  };
-
   if (user) return null;
 
   return (
@@ -60,7 +42,9 @@ const Login = () => {
 
       <div className="w-full max-w-md bg-surface/80 border border-white/10 rounded-2xl p-8 backdrop-blur-xl shadow-2xl relative z-10">
         <div className="flex flex-col items-center mb-8 text-center">
-          <BrandMark className="mb-4" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-amber-400 flex items-center justify-center text-gray-950 font-bold font-mono text-xl shadow-[0_0_20px_rgba(0,240,255,0.4)] mb-4">
+            AH
+          </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-text-primary tracking-wide">
             Andropedia Hub
           </h1>
@@ -109,23 +93,6 @@ const Login = () => {
             {isSubmitting ? 'Authenticating...' : 'Establish Session'}
           </Button>
         </form>
-
-        {neonAuth && (
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {['google', 'github'].map((provider) => (
-              <Button
-                key={provider}
-                type="button"
-                variant="secondary"
-                className="font-mono text-xs uppercase"
-                disabled={Boolean(socialSubmitting) || isSubmitting}
-                onClick={() => handleSocialLogin(provider)}
-              >
-                {socialSubmitting === provider ? 'Connecting...' : `Continue with ${provider}`}
-              </Button>
-            ))}
-          </div>
-        )}
         
         <div className="mt-6 text-center">
           <Link to="/signup" className="text-xs font-mono text-text-secondary hover:text-cyan-300 transition-colors">
