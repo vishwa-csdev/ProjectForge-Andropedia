@@ -14,6 +14,7 @@ class Settings:
     )
     DEV_MODE: bool = os.environ.get("DEV_MODE", "true").lower() == "true"
     FRONTEND_URL: str = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+    NEON_AUTH_JWKS_URL: str = os.environ.get("NEON_AUTH_JWKS_URL", "")
     SMTP_HOST: str = os.environ.get("SMTP_HOST", "")
     SMTP_PORT: int = int(os.environ.get("SMTP_PORT", "587"))
     SMTP_USER: str = os.environ.get("SMTP_USER", "")

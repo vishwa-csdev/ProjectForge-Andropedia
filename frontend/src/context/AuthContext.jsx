@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { api } from '../api';
+import { neonAuth } from '../auth';
 
 export const AuthContext = createContext(null);
 
@@ -10,13 +11,17 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Use raw fetch to avoid triggering api.js redirect on 401 during initial load
-        const response = await fetch('/api/auth/me', { credentials: 'include' });
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
+        if (neonAuth) {
+          const sessionResult = await neonAuth.getSession();
+          if (sessionResult.data?.session) {
+            setUser(await api.get('/auth/me'));
+          } else {
+            setUser(null);
+          }
         } else {
-          setUser(null);
+          // Keep local development compatible when Neon Auth is not configured.
+          const response = await fetch('/api/auth/me', { credentials: 'include' });
+          setUser(response.ok ? await response.json() : null);
         }
       } catch (error) {
         setUser(null);
@@ -28,19 +33,37 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const userData = await api.post('/auth/login', { email, password });
+    let userData;
+    if (neonAuth) {
+      const result = await neonAuth.signIn.email({ email, password });
+      if (result.error) throw new Error(result.error.message || 'Authentication failed');
+      userData = await api.get('/auth/me');
+    } else {
+      userData = await api.post('/auth/login', { email, password });
+    }
     setUser(userData);
     return userData;
   };
 
   const signup = async (name, email, password) => {
-    const userData = await api.post('/auth/signup', { name, email, password });
+    let userData;
+    if (neonAuth) {
+      const result = await neonAuth.signUp.email({ name, email, password });
+      if (result.error) throw new Error(result.error.message || 'Registration failed');
+      userData = await api.get('/auth/me');
+    } else {
+      userData = await api.post('/auth/signup', { name, email, password });
+    }
     setUser(userData);
   };
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      if (neonAuth) {
+        await neonAuth.signOut();
+      } else {
+        await api.post('/auth/logout');
+      }
     } catch (e) {
       console.error('Logout failed', e);
     }
