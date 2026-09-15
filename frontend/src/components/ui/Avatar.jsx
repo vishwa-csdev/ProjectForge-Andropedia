@@ -6,9 +6,9 @@ const Avatar = ({ name, size = 'md', className = '' }) => {
   // Hash name to pick a color
   const colors = [
     'bg-blue-900 text-blue-200',
-    'bg-purple-900 text-purple-200',
-    'bg-pink-900 text-pink-200',
-    'bg-indigo-900 text-indigo-200',
+    'bg-amber-900 text-amber-200',
+    'bg-rose-900 text-rose-200',
+    'bg-cyan-900 text-cyan-200',
     'bg-teal-900 text-teal-200',
     'bg-green-900 text-green-200',
     'bg-yellow-900 text-yellow-200',

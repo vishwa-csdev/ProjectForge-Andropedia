@@ -15,7 +15,7 @@ const Badge = ({ type, variant, children, className = '' }) => {
     // Member roles & telemetry
     lead: 'bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 glow-cyan',
     member: 'bg-white/5 text-text-secondary border border-white/10',
-    admin: 'bg-purple-500/20 text-purple-300 border border-purple-400/40',
+    admin: 'bg-accent/15 text-accent border border-accent/35',
     active: 'bg-success/15 text-success border border-success/30',
     archived: 'bg-white/5 text-text-muted border border-white/5',
   };

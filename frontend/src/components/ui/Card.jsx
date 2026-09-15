@@ -18,7 +18,7 @@ const Card = ({ children, elevated = false, statusColor = null, className = '', 
 
   return (
     <div 
-      className={`${surfaceClass} rounded-xl p-5 relative overflow-hidden transition-all duration-200 ${statusClass} ${className}`}
+      className={`${surfaceClass} app-card rounded-xl p-5 relative overflow-hidden transition-all duration-200 ${statusClass} ${className}`}
       {...props}
     >
       {children}

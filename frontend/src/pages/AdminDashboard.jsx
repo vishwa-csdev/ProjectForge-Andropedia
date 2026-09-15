@@ -1,11 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowDown, ArrowUp, Check, ChevronLeft, ChevronRight, CircleAlert, Database, FolderKanban, Search, ShieldCheck, Trash2, UserRound, Users, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 
-const Stat = ({ label, value, detail }) => <div className="bg-surface/70 border border-white/10 rounded-2xl p-5"><div className="text-xs font-mono uppercase tracking-widest text-text-muted">{label}</div><div className="text-3xl font-display font-bold text-cyan-300 mt-2">{value}</div>{detail && <div className="text-xs font-mono text-text-secondary mt-1">{detail}</div>}</div>;
+const PAGE_SIZE = 8;
+
+const Stat = ({ label, value, detail, icon: Icon, tone = 'teal' }) => (
+  <div className={`admin-stat admin-stat-${tone}`}>
+    <div className="flex items-center justify-between"><span className="admin-eyebrow">{label}</span><Icon size={19} /></div>
+    <strong>{value}</strong>
+    <span>{detail}</span>
+  </div>
+);
+
+const SortButton = ({ label, field, sort, onSort }) => (
+  <button type="button" className="admin-sort" onClick={() => onSort(field)}>
+    {label}
+    {sort.field === field && (sort.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}
+  </button>
+);
+
+const Pagination = ({ page, total, onChange }) => {
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (pages === 1) return null;
+  return <div className="admin-pagination"><span>Page {page} of {pages}</span><div><button type="button" disabled={page === 1} onClick={() => onChange(page - 1)} aria-label="Previous page"><ChevronLeft size={15} /></button><button type="button" disabled={page === pages} onClick={() => onChange(page + 1)} aria-label="Next page"><ChevronRight size={15} /></button></div></div>;
+};
+
+const EmptyTable = ({ message }) => <div className="admin-table-empty"><Database size={22} /><span>{message}</span></div>;
+
+const ConfirmModal = ({ action, onCancel, onConfirm, busy }) => {
+  if (!action) return null;
+  const isDelete = action.kind === 'delete-user';
+  return <div className="admin-modal-backdrop" role="presentation" onClick={onCancel}><div className="admin-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" onClick={(event) => event.stopPropagation()}><button type="button" className="admin-modal-close" onClick={onCancel} aria-label="Close confirmation"><X size={17} /></button><div className="admin-danger-icon"><Trash2 size={20} /></div><span className="admin-eyebrow">Destructive command</span><h2 id="confirm-title">{isDelete ? 'Delete operative account?' : 'Purge mission?'}</h2><p>{isDelete ? `This will permanently remove ${action.label}'s account and their project ownership data.` : `This will permanently remove ${action.label} and all tasks, resources, and contributions inside it.`}</p><div className="admin-confirm-actions"><Button variant="secondary" onClick={onCancel}>Cancel</Button><Button variant="danger" onClick={onConfirm} disabled={busy}>{busy ? 'Executing...' : isDelete ? 'Delete operative' : 'Purge mission'}</Button></div></div></div>;
+};
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -15,40 +45,49 @@ const AdminDashboard = () => {
   const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
-  const [resetConfirmation, setResetConfirmation] = useState('');
-  const [resetting, setResetting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [action, setAction] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [userPage, setUserPage] = useState(1);
+  const [projectPage, setProjectPage] = useState(1);
+  const [userSort, setUserSort] = useState({ field: 'name', direction: 'asc' });
+  const [projectSort, setProjectSort] = useState({ field: 'name', direction: 'asc' });
 
   const load = async () => {
+    setLoading(true);
     try {
       const [statsData, usersData, projectsData] = await Promise.all([api.get('/admin/stats'), api.get(`/admin/users${search ? `?search=${encodeURIComponent(search)}` : ''}`), api.get('/admin/projects')]);
-      setStats(statsData); setUsers(usersData.items); setProjects(projectsData);
-    } catch (requestError) { setError(requestError.message); }
+      setStats(statsData); setUsers(usersData.items || []); setProjects(projectsData || []); setError('');
+    } catch (requestError) { setError(requestError.message); } finally { setLoading(false); }
   };
 
   useEffect(() => { if (user && user.role !== 'admin') navigate('/'); }, [user, navigate]);
-  useEffect(() => { if (user?.role === 'admin') load(); }, [user, search]);
+  useEffect(() => { if (user?.role === 'admin') { setUserPage(1); load(); } }, [user, search]);
 
-  const updateRole = async (operative) => { if (!window.confirm(`Change ${operative.name}'s role?`)) return; await api.put(`/admin/users/${operative.id}/role`, { role: operative.role === 'admin' ? 'user' : 'admin' }); load(); };
-  const deleteUser = async (operative) => { if (!window.confirm(`Delete ${operative.name}'s account?`)) return; await api.delete(`/admin/users/${operative.id}`); load(); };
-  const deleteProject = async (project) => { if (!window.confirm(`Purge ${project.name}?`)) return; await api.delete(`/admin/projects/${project.id}`); load(); };
-  const updateProject = async (project, changes) => { await api.put(`/admin/projects/${project.id}`, changes); load(); };
-  const resetWorkspace = async () => {
-    if (resetConfirmation !== 'RESET ANDROPEDIA') return;
-    setResetting(true);
-    setError('');
-    try { await api.post('/admin/reset-workspace', { confirmation: resetConfirmation }); setResetConfirmation(''); await load(); }
-    catch (requestError) { setError(requestError.message); }
-    finally { setResetting(false); }
+  const sortRows = (rows, sort) => [...rows].sort((a, b) => { const aValue = sort.field === 'lead' ? a.creator_name : a[sort.field]; const bValue = sort.field === 'lead' ? b.creator_name : b[sort.field]; return String(aValue ?? '').localeCompare(String(bValue ?? ''), undefined, { numeric: true }) * (sort.direction === 'asc' ? 1 : -1); });
+  const sortedUsers = useMemo(() => sortRows(users, userSort), [users, userSort]);
+  const sortedProjects = useMemo(() => sortRows(projects, projectSort), [projects, projectSort]);
+  const visibleUsers = sortedUsers.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE);
+  const visibleProjects = sortedProjects.slice((projectPage - 1) * PAGE_SIZE, projectPage * PAGE_SIZE);
+
+  const toggleSort = (setter, current, field) => setter({ field, direction: current.field === field && current.direction === 'asc' ? 'desc' : 'asc' });
+  const updateRole = async (operative) => { await api.put(`/admin/users/${operative.id}/role`, { role: operative.role === 'admin' ? 'user' : 'admin' }); await load(); };
+  const updateProject = async (project, changes) => { await api.put(`/admin/projects/${project.id}`, changes); await load(); };
+  const executeDestructiveAction = async () => {
+    setBusy(true);
+    try { if (action.kind === 'delete-user') await api.delete(`/admin/users/${action.id}`); else await api.delete(`/admin/projects/${action.id}`); setAction(null); await load(); } catch (requestError) { setError(requestError.message); } finally { setBusy(false); }
   };
 
   if (!user || user.role !== 'admin') return null;
-  return <div className="space-y-8">
-    <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4"><div><div className="text-xs font-mono text-cyan-400 uppercase tracking-[0.25em]">Central Club Oversight</div><h1 className="text-3xl font-display font-bold mt-2">Admin Command Deck</h1><p className="text-text-secondary mt-1">Global telemetry and mission governance.</p></div><div className="text-xs font-mono text-emerald-400">● NETWORK NOMINAL</div></header>
-    {error && <div className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">{error}</div>}
-    <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">{stats && <><Stat label="Operatives" value={stats.operatives} /><Stat label="Active Missions" value={stats.active_projects} detail={`${stats.archived_projects} archived`} /><Stat label="Cleared Tasks" value={stats.completed_milestones} detail={`${stats.completion_rate}% completion`} /><Stat label="Stored Artifacts" value={stats.resources} detail={`${stats.contributions} contributions`} /></>}</section>
-    <section className="bg-surface/60 border border-white/10 rounded-2xl overflow-hidden"><div className="p-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h2 className="font-display text-lg font-bold">Operative Directory</h2><p className="text-xs text-text-secondary mt-1">Promote, demote, or remove global accounts.</p></div><Input aria-label="Search operatives" placeholder="Search name or email" value={search} onChange={(event) => setSearch(event.target.value)} className="sm:max-w-xs" /></div><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="text-xs font-mono uppercase text-text-muted"><tr><th className="p-4">Operative</th><th className="p-4">Role</th><th className="p-4">Projects</th><th className="p-4 text-right">Actions</th></tr></thead><tbody>{users.map((operative) => <tr key={operative.id} className="border-t border-white/5"><td className="p-4"><div className="font-medium">{operative.name}</div><div className="text-xs text-text-secondary">{operative.email}</div></td><td className="p-4"><span className={`px-2 py-1 rounded-md text-xs font-mono ${operative.role === 'admin' ? 'text-amber-300 bg-amber-400/10' : 'text-cyan-300 bg-cyan-400/10'}`}>{operative.role}</span></td><td className="p-4 text-text-secondary">{operative.project_count}</td><td className="p-4"><div className="flex justify-end gap-2"><Button size="sm" variant="secondary" onClick={() => updateRole(operative)}>{operative.role === 'admin' ? 'Demote' : 'Promote'}</Button>{operative.id !== user.id && <Button size="sm" variant="danger" onClick={() => deleteUser(operative)}>Delete</Button>}</div></td></tr>)}</tbody></table></div></section>
-    <section className="bg-surface/60 border border-white/10 rounded-2xl overflow-hidden"><div className="p-5 border-b border-white/10"><h2 className="font-display text-lg font-bold">Global Mission Registry</h2><p className="text-xs text-text-secondary mt-1">All visibility modes and archived missions included.</p></div><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="text-xs font-mono uppercase text-text-muted"><tr><th className="p-4">Mission</th><th className="p-4">Lead</th><th className="p-4">Status</th><th className="p-4">Signal</th><th className="p-4 text-right">Action</th></tr></thead><tbody>{projects.map((project) => <tr key={project.id} className="border-t border-white/5"><td className="p-4 font-medium"><button className="text-cyan-300 hover:text-cyan-200" onClick={() => navigate(`/projects/${project.id}`)}>{project.name}</button></td><td className="p-4"><select aria-label={`Lead for ${project.name}`} className="bg-base border border-white/10 rounded-lg px-2 py-1 text-xs" value={project.members.find((member) => member.role === 'lead')?.id || ''} onChange={(event) => updateProject(project, { lead_user_id: Number(event.target.value) })}><option value="">Unassigned</option>{project.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></td><td className="p-4"><select aria-label={`Status for ${project.name}`} className="bg-base border border-white/10 rounded-lg px-2 py-1 text-xs" value={project.status} onChange={(event) => updateProject(project, { status: event.target.value })}><option value="active">active</option><option value="archived">archived</option></select></td><td className="p-4 text-text-secondary">{project.member_count} members / {project.task_count} tasks</td><td className="p-4 text-right"><Button size="sm" variant="danger" onClick={() => deleteProject(project)}>Purge</Button></td></tr>)}</tbody></table></div></section>
-    <section className="rounded-2xl border border-danger/25 bg-danger/[0.04] p-5"><h2 className="font-display text-lg font-bold text-danger">Danger zone</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-text-secondary">Reset all workspace data, remove every other account, and create one clean test project owned by your current admin account. This cannot be undone.</p><div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end"><Input label="Confirmation phrase" placeholder="RESET ANDROPEDIA" value={resetConfirmation} onChange={(event) => setResetConfirmation(event.target.value)} /><Button variant="danger" disabled={resetConfirmation !== 'RESET ANDROPEDIA' || resetting} onClick={resetWorkspace}>{resetting ? 'Resetting...' : 'Reset workspace'}</Button></div></section>
+  return <div className="admin-page">
+    <header className="admin-header"><div><div className="admin-kicker"><ShieldCheck size={15} /> Central Club Oversight</div><h1>Admin Command Deck<span>.</span></h1><p>Global telemetry and mission governance.</p></div><div className="admin-network"><span /> Network nominal</div></header>
+    {error && <div className="admin-error"><CircleAlert size={16} /> {error}</div>}
+    <section className="admin-stats">{loading ? [1, 2, 3, 4].map((item) => <div className="admin-stat-skeleton" key={item} />) : <><Stat label="Operatives" value={stats?.operatives ?? 0} detail="registered accounts" icon={Users} /><Stat label="Active missions" value={stats?.active_projects ?? 0} detail={`${stats?.archived_projects ?? 0} archived`} icon={FolderKanban} tone="amber" /><Stat label="Cleared tasks" value={stats?.completed_milestones ?? 0} detail={`${stats?.completion_rate ?? 0}% completion`} icon={Check} /><Stat label="Stored artifacts" value={stats?.resources ?? 0} detail={`${stats?.contributions ?? 0} contributions`} icon={Database} tone="amber" /></>}</section>
+
+    <section className="admin-panel"><div className="admin-panel-header"><div><span className="admin-eyebrow">01 / Access control</span><h2>Operative Directory</h2><p>Promote, demote, or remove global accounts.</p></div><label className="admin-search"><Search size={16} /><input aria-label="Search operatives" placeholder="Search name or email" value={search} onChange={(event) => setSearch(event.target.value)} /></label></div><div className="admin-table-scroll"><table className="admin-table"><thead><tr><th><SortButton label="Operative" field="name" sort={userSort} onSort={(field) => toggleSort(setUserSort, userSort, field)} /></th><th><SortButton label="Role" field="role" sort={userSort} onSort={(field) => toggleSort(setUserSort, userSort, field)} /></th><th><SortButton label="Projects" field="project_count" sort={userSort} onSort={(field) => toggleSort(setUserSort, userSort, field)} /></th><th className="text-right">Actions</th></tr></thead><tbody>{loading ? <tr><td colSpan="4"><EmptyTable message="Loading operative telemetry..." /></td></tr> : visibleUsers.length ? visibleUsers.map((operative) => <tr key={operative.id}><td><div className="admin-person"><Avatar name={operative.name} size="sm" /><span><strong>{operative.name}</strong><small>{operative.email}</small></span></div></td><td><span className={`admin-role admin-role-${operative.role}`}>{operative.role}</span></td><td className="admin-muted">{operative.project_count}</td><td><div className="admin-actions"><button type="button" className="admin-action-neutral" onClick={() => updateRole(operative)} title={operative.role === 'admin' ? 'Demote to standard operative' : 'Promote to admin'}><ShieldCheck size={14} /><span>{operative.role === 'admin' ? 'Demote' : 'Promote'}</span></button>{operative.id !== user.id && <button type="button" className="admin-action-danger" onClick={() => setAction({ kind: 'delete-user', id: operative.id, label: operative.name })} title="Delete operative"><Trash2 size={14} /><span>Delete</span></button>}</div></td></tr>) : <tr><td colSpan="4"><EmptyTable message={search ? 'No operatives match this search.' : 'No operatives registered.'} /></td></tr>}</tbody></table></div><Pagination page={userPage} total={sortedUsers.length} onChange={setUserPage} /></section>
+
+    <section className="admin-panel"><div className="admin-panel-header"><div><span className="admin-eyebrow">02 / Mission governance</span><h2>Global Mission Registry</h2><p>All visibility modes and archived missions included.</p></div></div><div className="admin-table-scroll"><table className="admin-table"><thead><tr><th><SortButton label="Mission" field="name" sort={projectSort} onSort={(field) => toggleSort(setProjectSort, projectSort, field)} /></th><th><SortButton label="Lead" field="lead" sort={projectSort} onSort={(field) => toggleSort(setProjectSort, projectSort, field)} /></th><th><SortButton label="Status" field="status" sort={projectSort} onSort={(field) => toggleSort(setProjectSort, projectSort, field)} /></th><th>Signal</th><th className="text-right">Action</th></tr></thead><tbody>{loading ? <tr><td colSpan="5"><EmptyTable message="Loading mission telemetry..." /></td></tr> : visibleProjects.length ? visibleProjects.map((project) => <tr key={project.id}><td><button type="button" className="admin-mission-link" onClick={() => navigate(`/projects/${project.id}`)}>{project.name}</button></td><td><select aria-label={`Lead for ${project.name}`} className="admin-select" value={project.members.find((member) => member.role === 'lead')?.id || ''} onChange={(event) => updateProject(project, { lead_user_id: Number(event.target.value) })}><option value="">Unassigned</option>{project.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></td><td><select aria-label={`Status for ${project.name}`} className="admin-select" value={project.status} onChange={(event) => updateProject(project, { status: event.target.value })}><option value="active">active</option><option value="archived">archived</option></select></td><td className="admin-muted">{project.member_count} members / {project.task_count} tasks</td><td><div className="admin-actions admin-actions-end"><button type="button" className="admin-action-danger" onClick={() => setAction({ kind: 'purge-project', id: project.id, label: project.name })} title="Purge mission"><Trash2 size={14} /><span>Purge</span></button></div></td></tr>) : <tr><td colSpan="5"><EmptyTable message="No missions registered." /></td></tr>}</tbody></table></div><Pagination page={projectPage} total={sortedProjects.length} onChange={setProjectPage} /></section>
+    <ConfirmModal action={action} onCancel={() => !busy && setAction(null)} onConfirm={executeDestructiveAction} busy={busy} />
   </div>;
 };
 
