@@ -10,4 +10,3 @@ itsdangerous
 pydantic[email]
 python-dotenv
 reportlab
-PyJWT[crypto]

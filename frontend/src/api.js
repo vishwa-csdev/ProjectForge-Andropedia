@@ -1,16 +1,10 @@
 const API_PREFIX = '/api';
-import { getNeonAccessToken } from './auth';
 
 async function fetchWrapper(path, options = {}) {
   const url = `${API_PREFIX}${path}`;
   const headers = {
     ...options.headers,
   };
-
-  const accessToken = await getNeonAccessToken();
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
 
   if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
