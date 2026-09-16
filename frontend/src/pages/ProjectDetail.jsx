@@ -11,6 +11,7 @@ import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import MemberControlPanel from '../components/MemberControlPanel';
+import { ArrowLeft } from 'lucide-react';
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -112,7 +113,18 @@ const ProjectDetail = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
+      {/* Top Back Link */}
+      <div className="flex items-center justify-between">
+        <Link
+          to="/projects"
+          className="inline-flex items-center gap-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors uppercase tracking-wider group py-1"
+        >
+          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+          <span>All Missions / Projects</span>
+        </Link>
+      </div>
+
       {/* Spacecraft Project HUD Header */}
       <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center p-6 rounded-2xl bg-surface/80 border border-white/10 backdrop-blur-xl shadow-2xl relative overflow-hidden">
         {/* Subtle glowing ambient gradient */}

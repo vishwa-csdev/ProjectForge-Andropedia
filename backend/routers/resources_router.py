@@ -206,3 +206,167 @@ async def delete_resource(
     await db.delete(resource)
     await db.commit()
     return {"message": "Resource deleted"}
+
+
+common_router = APIRouter(prefix="/api/resources/common", tags=["Common Resources"])
+
+@common_router.get("", response_model=List[ResourceListResponse])
+async def list_common_resources(
+    tag: Optional[ResourceTag] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Resource).options(selectinload(Resource.uploaded_by_user)).where(Resource.project_id.is_(None))
+    if tag:
+        query = query.where(Resource.tag == tag)
+    query = query.order_by(Resource.added_at.desc())
+    result = await db.execute(query)
+    resources = result.scalars().all()
+    
+    response = []
+    for r in resources:
+        uploader_data = None
+        if r.uploaded_by_user:
+            uploader_data = ResourceUploader(id=r.uploaded_by_user.id, name=r.uploaded_by_user.name)
+        response.append({
+            "id": r.id, "project_id": r.project_id, "uploaded_by": r.uploaded_by,
+            "type": r.type, "location": r.location, "title": r.title, "tag": r.tag,
+            "added_at": r.added_at, "uploader": uploader_data
+        })
+    return response
+
+@common_router.post("", response_model=ResourceResponse, status_code=status.HTTP_201_CREATED)
+async def add_common_resource(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    content_type = request.headers.get("content-type", "")
+    
+    if "application/json" in content_type:
+        data = await request.json()
+        r_type = data.get("type")
+        location = data.get("location")
+        title = data.get("title")
+        tag = data.get("tag")
+        
+        if r_type != "link":
+            raise HTTPException(status_code=400, detail="JSON body is only supported for link types")
+        if not location or not title or not tag:
+            raise HTTPException(status_code=400, detail="Missing required fields")
+            
+        new_resource = Resource(
+            project_id=None,
+            uploaded_by=current_user.id,
+            type=ResourceType(r_type),
+            location=location,
+            title=title,
+            tag=ResourceTag(tag)
+        )
+    elif "multipart/form-data" in content_type:
+        form = await request.form()
+        file_obj = form.get("file")
+        r_type = form.get("type") or ("file" if file_obj else None)
+        title = form.get("title") or (getattr(file_obj, "filename", None) if file_obj else None)
+        tag = form.get("tag") or "doc"
+        
+        if not r_type or not title:
+            raise HTTPException(status_code=400, detail="Missing required form fields (type, title)")
+            
+        if r_type == "link":
+            location = form.get("location")
+            if not location:
+                raise HTTPException(status_code=400, detail="Location required for link")
+                
+            new_resource = Resource(
+                project_id=None,
+                uploaded_by=current_user.id,
+                type=ResourceType.link,
+                location=location,
+                title=title,
+                tag=ResourceTag(tag)
+            )
+        else:
+            file: UploadFile = file_obj
+            if not file:
+                raise HTTPException(status_code=400, detail="File required for file type")
+                
+            content = await file.read()
+            if len(content) > 25 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="File too large (max 25MB)")
+                
+            safe_filename = file.filename.replace(" ", "_") if file.filename else "upload.bin"
+            unique_filename = f"{uuid.uuid4()}_{safe_filename}"
+            filepath = os.path.join(settings.UPLOAD_DIR, unique_filename)
+            
+            with open(filepath, "wb") as f:
+                f.write(content)
+                
+            new_resource = Resource(
+                project_id=None,
+                uploaded_by=current_user.id,
+                type=ResourceType.file,
+                location=filepath,
+                title=title,
+                tag=ResourceTag(tag)
+            )
+    else:
+        raise HTTPException(status_code=415, detail="Unsupported Media Type")
+        
+    db.add(new_resource)
+    await db.commit()
+    await db.refresh(new_resource)
+    return new_resource
+
+@common_router.get("/{resource_id}/download")
+async def download_common_resource(
+    resource_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    from fastapi.responses import FileResponse
+    result = await db.execute(select(Resource).where(and_(Resource.id == resource_id, Resource.project_id.is_(None))))
+    resource = result.scalar_one_or_none()
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    if resource.type != ResourceType.file:
+        raise HTTPException(status_code=400, detail="Resource is not a file")
+    if not os.path.exists(resource.location):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+        
+    filename = os.path.basename(resource.location)
+    if "_" in filename:
+        download_name = filename.split("_", 1)[1]
+    else:
+        download_name = resource.title or filename
+        
+    return FileResponse(
+        resource.location,
+        filename=download_name,
+        media_type=mimetypes.guess_type(download_name)[0] or "application/octet-stream",
+        content_disposition_type="inline",
+    )
+
+@common_router.delete("/{resource_id}")
+async def delete_common_resource(
+    resource_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Resource).where(and_(Resource.id == resource_id, Resource.project_id.is_(None))))
+    resource = result.scalar_one_or_none()
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    if resource.uploaded_by != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this common resource")
+        
+    if resource.type == ResourceType.file and os.path.exists(resource.location):
+        try:
+            os.remove(resource.location)
+        except OSError:
+            pass
+            
+    await db.delete(resource)
+    await db.commit()
+    return {"message": "Common resource deleted"}

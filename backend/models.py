@@ -127,15 +127,15 @@ class Comment(Base):
 class Resource(Base):
     __tablename__ = "resources"
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
-    uploaded_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    project_id: Mapped[Optional[int]] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
+    uploaded_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     type: Mapped[ResourceType] = mapped_column(SQLEnum(ResourceType))
     location: Mapped[str] = mapped_column(String(500))
     title: Mapped[str] = mapped_column(String(200))
     tag: Mapped[ResourceTag] = mapped_column(SQLEnum(ResourceTag))
     added_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
-    project: Mapped["Project"] = relationship(back_populates="resources")
+    project: Mapped[Optional["Project"]] = relationship(back_populates="resources")
     uploaded_by_user: Mapped[Optional["User"]] = relationship(back_populates="resources_uploaded")
 
 

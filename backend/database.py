@@ -23,12 +23,20 @@ if db_url.startswith("postgresql+asyncpg://"):
     db_url = urlunsplit(parsed_url._replace(query=urlencode(query)))
 
 connect_args = {}
+engine_kwargs = {"echo": False}
+
 if "sqlite" in db_url:
     connect_args["check_same_thread"] = False
-elif postgres_ssl_required:
-    connect_args["ssl"] = True
+else:
+    if postgres_ssl_required:
+        connect_args["ssl"] = True
+    # If using asyncpg with Neon/PgBouncer pooler, disable prepared statement cache
+    if "asyncpg" in db_url:
+        connect_args["statement_cache_size"] = 0
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_recycle"] = 300
 
-engine = create_async_engine(db_url, connect_args=connect_args, echo=False)
+engine = create_async_engine(db_url, connect_args=connect_args, **engine_kwargs)
 
 if "sqlite" in db_url:
     @event.listens_for(engine.sync_engine, "connect")

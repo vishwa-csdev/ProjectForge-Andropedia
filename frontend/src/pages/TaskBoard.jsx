@@ -7,6 +7,7 @@ import TaskDetailModal from '../components/TaskDetailModal';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import ProjectNavHeader from '../components/ProjectNavHeader';
 
 const Column = ({ id, title, tasks, onTaskClick, titleColorClass }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -125,22 +126,13 @@ const TaskBoard = () => {
     { id: 'done', title: 'Done', colorClass: 'text-success' },
   ];
 
-  if (loading) return <div className="text-text-secondary p-8">Loading board...</div>;
+  if (loading) return <div className="text-text-secondary p-8 font-mono text-sm">Loading board...</div>;
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-cyan-400 font-mono text-sm">⬢</span>
-            <h1 className="font-display text-2xl font-bold text-text-primary tracking-wide">Tasks Board</h1>
-          </div>
-          <Link to={`/projects/${projectId}`} className="text-text-secondary hover:text-cyan-300 text-sm mt-0.5 inline-block transition-colors font-mono">
-            ← {project?.name || 'Project'}
-          </Link>
-        </div>
+      <ProjectNavHeader project={project} activeTab="tasks">
         <Button variant="cyan" onClick={() => setIsCreateModalOpen(true)}>Add Task</Button>
-      </div>
+      </ProjectNavHeader>
 
       <div className="flex gap-6 overflow-x-auto pb-4 flex-1">
         <DndContext 

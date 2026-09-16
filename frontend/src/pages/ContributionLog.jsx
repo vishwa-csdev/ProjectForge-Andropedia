@@ -8,6 +8,7 @@ import Input from '../components/ui/Input';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
+import ProjectNavHeader from '../components/ProjectNavHeader';
 
 const ContributionLog = () => {
   const { id: projectId } = useParams();
@@ -81,24 +82,11 @@ const ContributionLog = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-cyan-400 font-mono text-sm">◈</span>
-            <h1 className="font-display text-2xl font-bold text-text-primary tracking-wide">
-              Mission Contribution Log
-            </h1>
-          </div>
-          <p className="text-text-secondary text-sm mt-0.5">
-            {project?.name || 'Project Activity & Verification'}
-          </p>
-        </div>
-
+      <ProjectNavHeader project={project} activeTab="contributions">
         <Button variant="cyan" onClick={() => setShowAddModal(true)}>
           Log Work / Activity
         </Button>
-      </div>
+      </ProjectNavHeader>
 
       {/* Tabs & Member Filter Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-white/10">

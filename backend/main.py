@@ -15,16 +15,28 @@ from auth import hash_password
 from routers.auth_router import router as auth_router
 from routers.projects_router import router as projects_router
 from routers.tasks_router import router as tasks_router
-from routers.resources_router import router as resources_router
+from routers.resources_router import router as resources_router, common_router
 from routers.contributions_router import router as contributions_router
 from routers.reports_router import router as reports_router
 from routers.dashboard_router import router as dashboard_router
 from routers.admin_router import router as admin_router
 
+_schema_initialized = False
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    global _schema_initialized
+    if not _schema_initialized:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            if "postgresql" in settings.DATABASE_URL:
+                try:
+                    from sqlalchemy import text
+                    await conn.execute(text("ALTER TABLE resources ALTER COLUMN project_id DROP NOT NULL;"))
+                except Exception:
+                    pass
+        _schema_initialized = True
+
     if settings.ADMIN_EMAIL and settings.ADMIN_PASSWORD:
         async with AsyncSession(engine) as db:
             result = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL))
@@ -64,6 +76,7 @@ app.include_router(auth_router, prefix="/api/auth")
 app.include_router(projects_router, prefix="/api/projects")
 app.include_router(tasks_router, prefix="/api/projects")
 app.include_router(resources_router, prefix="/api/projects")
+app.include_router(common_router)
 app.include_router(contributions_router, prefix="/api/projects")
 app.include_router(reports_router, prefix="/api/projects")
 app.include_router(dashboard_router, prefix="/api/dashboard")

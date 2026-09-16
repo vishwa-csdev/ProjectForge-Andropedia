@@ -3,45 +3,77 @@ import { api } from '../api';
 
 export const AuthContext = createContext(null);
 
+const CACHE_KEY = 'andropedia_cached_user';
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !localStorage.getItem(CACHE_KEY);
+    } catch {
+      return true;
+    }
+  });
+
+  const updateCachedUser = (userData) => {
+    setUser(userData);
+    try {
+      if (userData) {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+      } else {
+        localStorage.removeItem(CACHE_KEY);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  };
 
   useEffect(() => {
+    let isMounted = true;
     const checkSession = async () => {
       try {
         // Use raw fetch to avoid triggering api.js redirect on 401 during initial load
         const response = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!isMounted) return;
         if (response.ok) {
           const userData = await response.json();
-          setUser(userData);
+          updateCachedUser(userData);
         } else {
-          setUser(null);
+          updateCachedUser(null);
         }
       } catch (error) {
-        setUser(null);
+        if (!isMounted) return;
+        // In case of transient network error, do not immediately wipe cached user if offline
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     checkSession();
+    return () => { isMounted = false; };
   }, []);
 
   const login = async (email, password) => {
     const userData = await api.post('/auth/login', { email, password });
-    setUser(userData);
+    updateCachedUser(userData);
     return userData;
   };
 
   const adminLogin = async (email, password) => {
     const userData = await api.post('/auth/admin-login', { email, password });
-    setUser(userData);
+    updateCachedUser(userData);
     return userData;
   };
 
   const signup = async (name, email, password) => {
     const userData = await api.post('/auth/signup', { name, email, password });
-    setUser(userData);
+    updateCachedUser(userData);
   };
 
   const logout = async () => {
@@ -50,12 +82,12 @@ export const AuthProvider = ({ children }) => {
     } catch (e) {
       console.error('Logout failed', e);
     }
-    setUser(null);
+    updateCachedUser(null);
     window.location.href = '/login';
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, adminLogin, signup, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, adminLogin, signup, logout, setUser: updateCachedUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -103,8 +103,8 @@ class ResourceCreate(BaseModel):
 
 class ResourceResponse(BaseModel):
     id: int
-    project_id: int
-    uploaded_by: Optional[int]
+    project_id: Optional[int] = None
+    uploaded_by: Optional[int] = None
     type: ResourceType
     location: str
     title: str

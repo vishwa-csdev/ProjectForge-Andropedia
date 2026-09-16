@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
+import { ArrowLeft } from 'lucide-react';
 
 const ProjectCreate = () => {
   const navigate = useNavigate();
@@ -42,6 +43,14 @@ const ProjectCreate = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <Link
+        to="/projects"
+        className="inline-flex items-center gap-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors uppercase tracking-wider group py-1 mb-4"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        <span>Back to Missions Registry</span>
+      </Link>
+
       <div className="flex items-center gap-2 mb-6">
         <span className="text-cyan-400 font-mono text-base">◈</span>
         <div>

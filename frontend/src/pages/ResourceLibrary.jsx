@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
+import ProjectNavHeader from '../components/ProjectNavHeader';
 import { Download, Eye, ExternalLink, FileText } from 'lucide-react';
 
 const TAG_OPTIONS = ['doc', 'link', 'code', 'design'];
@@ -158,24 +159,11 @@ const ResourceLibrary = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-cyan-400 font-mono text-sm">◈</span>
-            <h1 className="font-display text-2xl font-bold text-text-primary tracking-wide">
-              Resource Storage & Assets
-            </h1>
-          </div>
-          <p className="text-text-secondary text-sm mt-0.5">
-            {project?.name || 'Project Shared Repository'}
-          </p>
-        </div>
-
+      <ProjectNavHeader project={project} activeTab="resources">
         <Button variant="cyan" onClick={() => setShowAddModal(true)}>
           Upload / Add Asset
         </Button>
-      </div>
+      </ProjectNavHeader>
 
       {/* Tag Filters */}
       <div className="flex gap-2 flex-wrap pb-1">

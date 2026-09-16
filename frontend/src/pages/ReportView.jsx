@@ -7,6 +7,7 @@ import Badge from '../components/ui/Badge';
 import Avatar from '../components/ui/Avatar';
 import ProgressDial from '../components/ProgressDial';
 import DeadlineBadge from '../components/DeadlineBadge';
+import ProjectNavHeader from '../components/ProjectNavHeader';
 
 const ReportView = () => {
   const { id } = useParams();
@@ -68,28 +69,12 @@ const ReportView = () => {
   const totalTasks = task_summary.total || 0;
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Header with Navigation & PDF Export */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-3xl font-bold text-text-primary">{project.name} Report</h1>
-            <Badge type={project.status === 'active' ? 'in_progress' : 'todo'}>{project.status}</Badge>
-          </div>
-          <p className="text-text-secondary text-sm mt-1">
-            Generated on {new Date(generated_at).toLocaleString()}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link to={`/projects/${id}`}>
-            <Button variant="secondary">Back to Project</Button>
-          </Link>
-          <Button variant="cyan" onClick={handleDownloadPdf} disabled={downloading}>
-            {downloading ? 'Generating PDF...' : 'Download PDF Report'}
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
+      <ProjectNavHeader project={project} activeTab="report">
+        <Button variant="cyan" onClick={handleDownloadPdf} disabled={downloading}>
+          {downloading ? 'Generating PDF...' : 'Download PDF Report'}
+        </Button>
+      </ProjectNavHeader>
 
       {/* Overview & Signature Progress Dial */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
