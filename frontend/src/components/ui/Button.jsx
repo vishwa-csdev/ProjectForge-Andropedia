@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const Button = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
+const Button = ({ children, variant = 'primary', size = 'md', className = '', to, ...props }) => {
   const baseStyles = 'app-button inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#05060A]';
   
   const variants = {
@@ -17,9 +18,19 @@ const Button = ({ children, variant = 'primary', size = 'md', className = '', ..
     lg: 'px-6 py-2.5 text-base min-h-[44px]',
   };
 
+  const classes = `${baseStyles} ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} ${className}`;
+
+  if (to) {
+    return (
+      <Link to={to} className={classes} {...props}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
     <button 
-      className={`${baseStyles} ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} ${className}`}
+      className={classes}
       {...props}
     >
       {children}

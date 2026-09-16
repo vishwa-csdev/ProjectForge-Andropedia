@@ -65,11 +65,11 @@ class Project(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(150))
     description: Mapped[str] = mapped_column(String)
-    status: Mapped[ProjectStatus] = mapped_column(SQLEnum(ProjectStatus), default=ProjectStatus.active)
+    status: Mapped[ProjectStatus] = mapped_column(SQLEnum(ProjectStatus), default=ProjectStatus.active, index=True)
     visibility: Mapped[ProjectVisibility] = mapped_column(SQLEnum(ProjectVisibility), default=ProjectVisibility.open)
     deadline: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    created_by: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), index=True)
 
     creator: Mapped["User"] = relationship(back_populates="projects")
     memberships: Mapped[List["Membership"]] = relationship(back_populates="project", cascade="all, delete-orphan")
@@ -82,8 +82,8 @@ class Membership(Base):
     __tablename__ = "memberships"
     __table_args__ = (UniqueConstraint("user_id", "project_id", name="uq_user_project"),)
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
     role: Mapped[MembershipRole] = mapped_column(SQLEnum(MembershipRole), default=MembershipRole.member)
     joined_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
@@ -94,13 +94,13 @@ class Membership(Base):
 class Task(Base):
     __tablename__ = "tasks"
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(String)
-    assignee_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    status: Mapped[TaskStatus] = mapped_column(SQLEnum(TaskStatus), default=TaskStatus.todo)
+    assignee_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    status: Mapped[TaskStatus] = mapped_column(SQLEnum(TaskStatus), default=TaskStatus.todo, index=True)
     priority: Mapped[TaskPriority] = mapped_column(SQLEnum(TaskPriority), default=TaskPriority.medium)
-    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
     parent_task_id: Mapped[Optional[int]] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
@@ -115,8 +115,8 @@ class Task(Base):
 class Comment(Base):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(primary_key=True)
-    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     content: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
@@ -127,12 +127,12 @@ class Comment(Base):
 class Resource(Base):
     __tablename__ = "resources"
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[Optional[int]] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
-    uploaded_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    project_id: Mapped[Optional[int]] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=True, index=True)
+    uploaded_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     type: Mapped[ResourceType] = mapped_column(SQLEnum(ResourceType))
     location: Mapped[str] = mapped_column(String(500))
     title: Mapped[str] = mapped_column(String(200))
-    tag: Mapped[ResourceTag] = mapped_column(SQLEnum(ResourceTag))
+    tag: Mapped[ResourceTag] = mapped_column(SQLEnum(ResourceTag), index=True)
     added_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
     project: Mapped[Optional["Project"]] = relationship(back_populates="resources")
@@ -142,11 +142,11 @@ class Resource(Base):
 class Contribution(Base):
     __tablename__ = "contributions"
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    task_id: Mapped[Optional[int]] = mapped_column(ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    task_id: Mapped[Optional[int]] = mapped_column(ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True, index=True)
     description: Mapped[str] = mapped_column(String)
-    logged_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    logged_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), index=True)
 
     project: Mapped["Project"] = relationship(back_populates="contributions")
     user: Mapped["User"] = relationship(back_populates="contributions")

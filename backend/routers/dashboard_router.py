@@ -56,21 +56,40 @@ async def get_dashboard(current_user: User = Depends(get_current_user), db: Asyn
     project_ids = [p.id for p in projects]
     
     my_projects = []
-    for p in projects:
-        mem_res = await db.execute(select(func.count()).select_from(Membership).where(Membership.project_id == p.id))
-        member_count = mem_res.scalar() or 0
+    member_counts = {}
+    task_stats = {}
+    if project_ids:
+        mem_res = await db.execute(
+            select(Membership.project_id, func.count(Membership.id))
+            .where(Membership.project_id.in_(project_ids))
+            .group_by(Membership.project_id)
+        )
+        member_counts = dict(mem_res.all())
         
-        task_res = await db.execute(select(Task.status).where(Task.project_id == p.id))
-        tasks = task_res.scalars().all()
-        task_count = len(tasks)
-        done_count = sum(1 for t in tasks if t == TaskStatus.done)
+        task_res = await db.execute(
+            select(Task.project_id, Task.status, func.count(Task.id))
+            .where(Task.project_id.in_(project_ids))
+            .group_by(Task.project_id, Task.status)
+        )
+        for pid, t_status, cnt in task_res.all():
+            if pid not in task_stats:
+                task_stats[pid] = {"total": 0, "done": 0}
+            task_stats[pid]["total"] += cnt
+            if t_status == TaskStatus.done:
+                task_stats[pid]["done"] += cnt
+                
+    for p in projects:
+        m_count = member_counts.get(p.id, 0)
+        stats = task_stats.get(p.id, {"total": 0, "done": 0})
+        task_count = stats["total"]
+        done_count = stats["done"]
         progress = (done_count / task_count * 100.0) if task_count > 0 else 0.0
         
         my_projects.append(
             DashboardProject(
                 id=p.id,
                 name=p.name,
-                member_count=member_count,
+                member_count=m_count,
                 task_count=task_count,
                 progress=round(progress, 2)
             )

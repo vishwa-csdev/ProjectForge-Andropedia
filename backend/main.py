@@ -54,6 +54,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+from starlette.middleware.gzip import GZipMiddleware
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SECRET_KEY,
@@ -62,6 +64,7 @@ app.add_middleware(
     same_site="lax",
     https_only=not settings.DEV_MODE,
 )
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")

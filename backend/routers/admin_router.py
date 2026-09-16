@@ -149,12 +149,52 @@ async def reset_workspace(
 @router.get("/projects")
 async def list_admin_projects(_: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     projects = (await db.execute(select(Project, User.name).join(User, User.id == Project.created_by).order_by(Project.created_at.desc()))).all()
+    project_ids = [p.id for p, _ in projects]
+    
+    member_counts = {}
+    task_counts = {}
+    members_by_proj = {}
+    if project_ids:
+        m_res = await db.execute(
+            select(Membership.project_id, func.count(Membership.id))
+            .where(Membership.project_id.in_(project_ids))
+            .group_by(Membership.project_id)
+        )
+        member_counts = dict(m_res.all())
+        
+        t_res = await db.execute(
+            select(Task.project_id, func.count(Task.id))
+            .where(Task.project_id.in_(project_ids))
+            .group_by(Task.project_id)
+        )
+        task_counts = dict(t_res.all())
+        
+        members_res = await db.execute(
+            select(Membership.project_id, User.id, User.name, Membership.role)
+            .join(Membership, Membership.user_id == User.id)
+            .where(Membership.project_id.in_(project_ids))
+            .order_by(User.name)
+        )
+        for pid, u_id, u_name, role in members_res.all():
+            if pid not in members_by_proj:
+                members_by_proj[pid] = []
+            members_by_proj[pid].append({"id": u_id, "name": u_name, "role": role})
+
     response = []
     for project, creator_name in projects:
-        member_count = (await db.execute(select(func.count()).select_from(Membership).where(Membership.project_id == project.id))).scalar() or 0
-        task_count = (await db.execute(select(func.count()).select_from(Task).where(Task.project_id == project.id))).scalar() or 0
-        member_rows = (await db.execute(select(User.id, User.name, Membership.role).join(Membership, Membership.user_id == User.id).where(Membership.project_id == project.id).order_by(User.name))).all()
-        response.append({"id": project.id, "name": project.name, "status": project.status, "visibility": project.visibility, "creator_name": creator_name, "member_count": member_count, "task_count": task_count, "members": [{"id": member_id, "name": member_name, "role": role} for member_id, member_name, role in member_rows]})
+        m_count = member_counts.get(project.id, 0)
+        t_count = task_counts.get(project.id, 0)
+        m_list = members_by_proj.get(project.id, [])
+        response.append({
+            "id": project.id,
+            "name": project.name,
+            "status": project.status,
+            "visibility": project.visibility,
+            "creator_name": creator_name,
+            "member_count": m_count,
+            "task_count": t_count,
+            "members": m_list
+        })
     return response
 
 

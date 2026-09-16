@@ -45,7 +45,7 @@ const KNOWLEDGE_GUIDES = [
     description: 'Pre-flight checks for design reviews, documentation quality, security verification, and handoff readiness.',
     category: 'Guides',
     type: 'Checklist',
-    meta: '12 checks',
+    meta: '',
     icon: FileCode2,
     content: [
       'Architecture and interface definitions are documented and agreed upon.',
@@ -60,7 +60,7 @@ const KNOWLEDGE_GUIDES = [
     description: 'Patterns for logging useful work and telemetry so the club can see progress and verify credit accurately.',
     category: 'Guides',
     type: 'Playbook',
-    meta: '6 chapters',
+    meta: '',
     icon: BookOpen,
     content: [
       'Describe the exact change or delivery, not just the raw time spent.',
@@ -536,7 +536,7 @@ const ClubLibrary = () => {
               {React.createElement(selectedGuide.icon, { size: 21 })}
             </div>
             <span className="library-card-type">
-              {selectedGuide.category} · {selectedGuide.type} · {selectedGuide.meta}
+              {selectedGuide.category} · {selectedGuide.type}{selectedGuide.meta ? ` · ${selectedGuide.meta}` : ''}
             </span>
             <h2 id="library-guide-title">{selectedGuide.title}</h2>
             <p>{selectedGuide.description}</p>
